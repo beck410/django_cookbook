@@ -26,7 +26,6 @@ class RecipeList(APIView):
         serializer = RecipeSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             serializer.save()
-            # ingredients_response = self._add_ingredients(request.data['ingredients'], serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -43,7 +42,6 @@ class RecipeDetail(APIView):
             raise Http404
 
     def get(self, request, pk=None):
-
         recipe = self._get_object(pk)
         # ingredients = Ingredient.objects.filter(recipe=recipe)
 
@@ -59,9 +57,17 @@ class RecipeDetail(APIView):
         recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    def put(self, request, pk, format=None):
+        recipe = Recipe.objects.get(pk=pk)
+        serializer = RecipeSerializer(recipe, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class IngredientList(APIView):
-
     def _get_object(self, pk):
         try:
             return Recipe.objects.get(pk=pk)
@@ -95,14 +101,8 @@ class IngredientDetail(APIView):
 
     def get(self, request, pk=None):
         ingredient = self._get_object(pk)
-        # ingredients = Ingredient.objects.filter(recipe=recipe)
-
         ingredient_serializer = IngredientSerializer(ingredient, context={'request': request})
-
-        # ingredients_serializer = IngredientSerializer(ingredients, many=True)
-        return Response({
-            'ingredient_details': ingredient_serializer.data
-        })
+        return Response(ingredient_serializer.data, status=status.HTTP_204_NO_CONTENT)
 
     def delete(self, request, pk):
         ingredient = self._get_object(pk)
